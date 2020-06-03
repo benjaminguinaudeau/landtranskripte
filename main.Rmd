@@ -1,0 +1,67 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+pacman::p_load(pdftools, tidyverse)
+source("split_column.R")
+source("read_pdf.R")
+
+```
+
+
+# Read_pdf
+
+```{r}
+
+file_1 <- read_pdf("data/16_0001_11052016.pdf")
+file_2 <- read_pdf("data/WP18-Sitzung1.pdf") %>%
+  str_split("\n")
+
+file_2[[5]]
+file_1[3]
+
+```
+
+
+# Split Column
+
+```{r}
+
+pages <- file_1[2:21]
+
+# Clean TOC
+
+parse_page <- function(page){
+  cols <- page %>%
+    str_split("\n") %>%
+    .[[1]] %>%
+    tail(-4) %>%
+    split_column() %>%
+    str_split("\n")
+  
+  col_1 <- cols %>%
+    map_chr(1)
+  
+  col_2 <-  cols %>%
+    map(2) %>%
+    compact %>%
+    as.character
+  
+  c(col_1, col_2)
+}
+
+parsed_pages <- pages %>%
+  map(parse_page) %>%
+  compact %>%
+  reduce(c)
+
+parsed_pages %>%
+  paste(collapse = "\n") %>%
+  str_extract_all("\n[^\n]+[(räsident)|(Abg.)][^\n]+\\:")
+
+```
+
